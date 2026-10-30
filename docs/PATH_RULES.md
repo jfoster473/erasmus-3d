@@ -135,7 +135,8 @@ more than in the code (map 1 = `PARK_PATHS[0]`).
   should be continuous down the hill").
 - **D6 No fence** at the hill path's foot (the first 2.5 m of its climb, where the bank beside it is low: the user,
   round 31, "Remove the fence at the bottom of the hill"), round the funicular bend's tip (its white lineside fence is the barrier there: the rope on the bend's outside
-  runs to the white fence's end and stops against it, never doubling it), in the funfair's gateway (the rope ends
+  runs to the white fence's end and stops against it, never doubling it — right up to its end post, no gap to slip
+  through: round 41c, the user: "extend the rope fence so that it covers here and you can't fall down"), in the funfair's gateway (the rope ends
   against the funfair's wall beside it), or on the glade side of the top leg (so she can run down for the ball).
 
 - **D7 Park Güell, the hairpin by the east side stairs** (round 40, the user's red line: "put a rope fence here";

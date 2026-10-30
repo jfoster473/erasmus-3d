@@ -4475,6 +4475,8 @@ func _physics_process(dt: float) -> void:
 				turn_camera((rk.x if ride_inside and not ride_look else -rk.x) * 1.6 * dt, rk.y * 0.9 * dt)
 			if benches and benches.seated():
 				benches.clamp_look()
+				if street and street.trufa:
+					street.trufa.tick(dt)             # (round 41c, 10 #26a: the dog comes and sits at her feet)
 			update_camera(dt, 0.0)
 			animate_skin(dt, 0.0)
 			north.tick(dt)

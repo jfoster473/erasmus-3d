@@ -101,7 +101,10 @@ func candidates(p: Vector3) -> Array:
 		var tp := trufa.global_position
 		var known: bool = main.game.m_active("dog") or main.game.m_done("dog")     # (Montse has told her the dog's name)
 		var label := ("Call Trufa" if known else "Look at the dog") if trufa.state == Dog.LOST else "Talk to Trufa"
-		out.append({"x": tp.x, "z": tp.z, "r": 1.5, "label": label, "act": "trufa"})
+		# (round 41c, 10 #26b, the user: "If there are two options and one of them is Trufa should be the secondary one…
+		# only when Trufa is following me. When Trufa's just staying where they are, Trufa is the first thing to talk to")
+		var prio := -3.0 if trufa.state == Dog.FOLLOW else 1.0
+		out.append({"x": tp.x, "z": tp.z, "r": 1.5, "label": label, "act": "trufa", "prio": prio})
 	for bk in bikes:
 		if bk == own_bike:
 			out.append({"x": bk.position.x, "z": bk.position.z, "r": 1.3, "label": "Ride your bike", "act": "bike", "bike": bk})

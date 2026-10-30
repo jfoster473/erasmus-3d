@@ -43,18 +43,22 @@ separately, by Google Drive. To play you need three things, then one command.
 [godotengine.org/download](https://godotengine.org/download) (it was made with 4.7.2). On a Mac, put `Godot.app` in
 `Applications`. Nothing else needs installing to play (Blender and Python are only for rebuilding the city).
 
-**2. The big files** (`bigfiles/`, about 2.6 GB): ask the game's owner for the Google Drive link, download the folder
-and put it **inside this folder**, named exactly `bigfiles`, next to `project.godot`:
+**2. The big files** (`bigfiles/`): ask the game's owner for the Google Drive link, download the folder and put it
+**inside this folder**, named exactly `bigfiles`, next to `project.godot`. To play, about 720 MB is all it takes:
 
 ```
 Erasmus 3D/
   project.godot
   engine/  shaders/  worlds/  builder/  docs/  tools/
-  bigfiles/          <- from Google Drive
-    originals/       (the bought models: people, furniture, houses — needed to play)
-    built/           (the built city, the bicycle, the sound — needed to play)
-    cache/           (only for rebuilding; can be left out)
+  bigfiles/                  <- from Google Drive
+    built/                   (the built city, the bicycle, the sound: 546 MB — needed to play)
+    originals/meshy/         (only these 14 models are needed to play, 172 MB: the people and the dog —
+                              child, man, man2, man3, montse, oldlady, oldman, passerby, sandra_a, sandra_b,
+                              trufa, woman, woman2, workman, each .glb)
 ```
+
+The rest of the owner's `bigfiles/` (the houses and furniture as bought, which the build has already baked into the
+city, and `cache/`) is only needed to rebuild the city in Blender.
 
 **3. Once, the first time: let Godot prepare its files** (seconds to a minute; it prints a few lines and stops by itself).
 In a terminal, from this folder:
@@ -85,7 +89,7 @@ Do these in order, from this folder, and stop to ask the user where any step fai
 1. Check Godot: `/Applications/Godot.app/Contents/MacOS/Godot --version` should print `4.7…` (on other systems, ask
    the user where Godot is). If it isn't installed, tell the user to install Godot 4.7 (standard, not .NET) from
    godotengine.org — don't download it yourself without asking.
-2. Check the big files: `bigfiles/built/barcelona/scene.json` and `bigfiles/originals/meshy/` must exist. If not, ask
+2. Check the big files: `bigfiles/built/barcelona/scene.json` and `bigfiles/originals/meshy/sandra_a.glb` must exist. If not, ask
    the user for the Google Drive folder (only they have the link) and to put it here as `bigfiles/`.
 3. First time only: `/Applications/Godot.app/Contents/MacOS/Godot --headless --path . --import`
 4. Optional check that it works, silently, about 2 minutes (prints `MISSIONS ok`):

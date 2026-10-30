@@ -30,6 +30,7 @@ const SEAT_DROP := 0.2           # metres her feet go below the basket's floor m
 const WAIT_HOME := 30.0          # (round 23) seconds she waits outside a building before going home (once she knows it)
 const REJOIN := 3.0              # Sandra this close to a waiting Trufa: she follows again
 const RUN_UP := 1.2              # (round 23) at most this long running up to the bike before she pounces
+const SETTLE := 3.0              # (round 41c, 10 #26a) seconds Sandra stands still before, following, she sits
 
 var state := LOST
 var main: Node3D                 # main.gd: player, ground height, physics
@@ -61,6 +62,7 @@ var hop_a := Vector3.ZERO        # where the hop started
 var hop_b := Vector3.ZERO        # where a hop out lands
 var wait_t := 0.0                # how long she has been waiting outside
 var run_up := -1.0               # running up to the bike (seconds so far), before the pounce; -1 not running up
+var still_t := 0.0               # (round 41c) how long Sandra has stood still, while she follows
 
 
 func setup(m: Node3D, scene: Node3D, at: Vector3, yaw: float, hip_height: float) -> void:
@@ -187,6 +189,21 @@ func tick(dt: float) -> void:
 			target = wander
 			want_speed = 1.2 if position.distance_to(wander) > 0.3 else 0.0
 			sniff = move_toward(sniff, 1.0 if want_speed > 0.0 else 0.6, dt * 2.0)
+		FOLLOW when main.benches and main.benches.seated():
+			# (round 41c, 10 #26a, the user: "If I'm sitting on the bench, it should sit down as well. Just on the
+			# ground") at Sandra's feet in front of the bench, a little to one side, facing out the way it does
+			var bb: Array = main.benches.list[main.benches.at]
+			var bf := Vector3(bb[1].x, 0, bb[1].y)
+			var spot := Vector3(bb[0].x, 0, bb[0].y) + bf * 0.9 + Vector3(bf.z, 0, -bf.x) * side * 0.45
+			spot.y = position.y
+			target = spot
+			var gap := dxz(position, spot)
+			want_speed = clampf(gap * 2.5, 0.0, 2.5) if gap > 0.12 else 0.0
+			if gap <= 0.3:
+				heading = lerp_angle(heading, atan2(bf.x, bf.z), 1.0 - exp(-4.0 * dt))
+				sitting = true
+			still_t = SETTLE
+			sniff = move_toward(sniff, 0.0, dt * 3.0)
 		FOLLOW:
 			record_trail(sandra)
 			# her place: beside Sandra, on whichever side she is already on
@@ -196,11 +213,24 @@ func tick(dt: float) -> void:
 			if absf(rel.dot(left)) > 0.4:
 				side = signf(rel.dot(left))
 			var spot := sandra + left * side * BESIDE - fwd * 0.15
+			# (round 41c: on the hills Sandra's body is at street level and only her model is lifted, so measured with
+			# height she was always metres off and the dog never settled: along the ground only)
+			spot.y = position.y
 			target = follow_target(spot)
-			var gap := flat(position.distance_to(spot))
+			var gap := dxz(position, spot)
 			# Sandra's own pace, a little more while she is behind, so she catches up and then keeps alongside
 			var pace: float = absf(main.speed)
 			want_speed = clampf(pace + (gap - 0.25) * 2.0, 0.0, maxf(pace * 1.3, 2.5)) if gap > 0.25 else pace
+			# (round 41c, 10 #26a, the user: "It should sit down if I stop for more than 3 seconds. And it shouldn't be
+			# running") Sandra standing still: once near her place she stops there, turned towards her (no circling
+			# round the exact spot, legs going), and after SETTLE seconds she sits
+			still_t = still_t + dt if pace < 0.15 else 0.0
+			var near_ := Vector2(position.x - sandra.x, position.z - sandra.z).length()
+			if still_t > 0.0 and (gap < 1.2 or near_ < 1.6):   # (on either side of her)
+				want_speed = 0.0
+				face(sandra, dt)
+				if still_t > SETTLE:
+					sitting = true
 			if gap < 0.6 and pace > 0.3:
 				heading = lerp_angle(heading, atan2(fwd.x, fwd.z), 1.0 - exp(-6.0 * dt))
 			sniff = move_toward(sniff, 0.0, dt * 3.0)
@@ -209,7 +239,7 @@ func tick(dt: float) -> void:
 			sitting = true
 			want_speed = 0.0
 			face(sandra, dt)
-			if flat(position.distance_to(sandra)) > STAY_RELEASE and main.game.m_done("dog"):
+			if dxz(position, sandra) > STAY_RELEASE and main.game.m_done("dog"):
 				state = GOING_HOME
 		WAIT:
 			sitting = true
@@ -217,7 +247,7 @@ func tick(dt: float) -> void:
 			wait_t += dt
 			if main.where == "out":
 				face(sandra, dt)
-				if flat(position.distance_to(sandra)) < REJOIN:
+				if dxz(position, sandra) < REJOIN:
 					follow()
 			if state == WAIT and wait_t > WAIT_HOME and main.game.m_done("dog"):
 				state = GOING_HOME
@@ -225,11 +255,11 @@ func tick(dt: float) -> void:
 			target = home_step()
 			want_speed = 3.8
 			sniff = move_toward(sniff, 0.0, dt * 3.0)
-			if flat(position.distance_to(home_pos)) < 0.25:
+			if dxz(position, home_pos) < 0.25:
 				settle_home()
 		HOME:
 			sitting = true
-			var to_home := flat(position.distance_to(home_pos))
+			var to_home := dxz(position, home_pos)
 			if to_home > 0.2:
 				target = home_pos
 				want_speed = 1.5
@@ -258,6 +288,7 @@ func tick(dt: float) -> void:
 			dodge_t = 0.5
 	# move
 	speed = move_toward(speed, want_speed, (14.0 if want_speed > speed else 18.0) * dt)
+	var p0 := position
 	var to := target - position
 	to.y = 0.0
 	if dodge_t > 0.0:
@@ -270,7 +301,13 @@ func tick(dt: float) -> void:
 		var dir := to.normalized()
 		heading = lerp_angle(heading, atan2(dir.x, dir.z), 1.0 - exp(-10.0 * dt))
 		var step := minf(speed * dt, to.length())
-		position += Vector3(sin(heading), 0, cos(heading)) * step
+		# (round 41c: the last half metre straight in, not along a heading still turning: she used to circle the spot)
+		position += (dir if to.length() < 0.5 else Vector3(sin(heading), 0, cos(heading))) * step
+	# (round 41c, 10 #26a, the user: "it's running in front of me in the spot when I stop") her legs go only as fast as
+	# she really goes: wherever she is held up (by Sandra, a wall, a point she is already on) she slows and stops
+	var moved := Vector2(position.x - p0.x, position.z - p0.z).length() / maxf(dt, 0.001)
+	if moved < speed * 0.3:
+		speed = move_toward(speed, moved, 18.0 * dt)
 	position.y = lerpf(position.y, main.ground_at(position), 1.0 - exp(-14.0 * dt))
 	# animate
 	if nudged > 0.2:
@@ -285,7 +322,7 @@ func tick(dt: float) -> void:
 	pose.leap = 0.0
 	pose.pitch = 0.0
 	pose.grounded = true
-	var happy := state == FOLLOW or (state == STAY and flat(position.distance_to(sandra)) < 3.0)
+	var happy := state == FOLLOW or (state == STAY and dxz(position, sandra) < 3.0)
 	wag_amt = lerpf(wag_amt, 0.7 if happy else 0.3, 1.0 - exp(-2.0 * dt))
 	wag += dt * (14.0 if happy else 6.0)
 	pose.wag = sin(wag) * wag_amt
@@ -294,6 +331,11 @@ func tick(dt: float) -> void:
 
 func flat(d: float) -> float:
 	return d
+
+
+func dxz(a: Vector3, b: Vector3) -> float:
+	# (round 41c) along the ground: on the hills Sandra's body is at street level and only her model is lifted
+	return Vector2(a.x - b.x, a.z - b.z).length()
 
 
 func face(p: Vector3, dt: float) -> void:
@@ -323,10 +365,10 @@ func clear_line(a: Vector3, b: Vector3) -> bool:
 func follow_target(sandra: Vector3) -> Vector3:
 	# straight for her when the way is clear, otherwise along the way she walked
 	if clear_line(position, sandra):
-		while trail.size() > 1 and trail[0].distance_to(sandra) > 1.0:
+		while trail.size() > 1 and dxz(trail[0], sandra) > 1.0:
 			trail.pop_front()
 		return sandra
-	while trail.size() > 1 and position.distance_to(trail[0]) < 0.5:
+	while trail.size() > 1 and dxz(position, trail[0]) < 0.5:
 		trail.pop_front()
 	return trail[0] if not trail.is_empty() else sandra
 

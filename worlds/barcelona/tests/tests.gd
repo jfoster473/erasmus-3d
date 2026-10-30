@@ -112,6 +112,7 @@ const MODES := {
 	"--bielball=": "run_bielball",
 	"--vfchain=": "run_vfchain",
 	"--lookstate": "run_lookstate",
+	"--dogsettle=": "run_dogsettle",
 	"--vftest=": "run_vftest",
 	"--vfplaces=": "run_vfplaces",
 	"--cryptprobe": "run_cryptprobe",
@@ -8489,4 +8490,86 @@ func run_lookstate() -> void:
 			await get_tree().create_timer(2.5).timeout
 			var env: Environment = m.world_env.environment
 			printerr("LOOKSTATE in a room: light shafts=%s bounce light=%s" % [env.volumetric_fog_enabled, env.sdfgi_enabled])
+	end_test()
+
+
+func dog_report(dir: String, tag: String, look_at: Vector3, from_dir: Vector3) -> void:
+	# her state, and how far her lowest paw is from the ground (below 0: sunk in); a picture from the side
+	var tr: Node3D = m.street.trufa
+	var low := INF
+	for bn in ["backleg2", "R_backleg2", "frontleg1", "R_frontleg1"]:
+		var bi: int = tr.skel.find_bone(bn)
+		if bi >= 0:
+			low = minf(low, (tr.skel.global_transform * tr.skel.get_bone_global_pose(bi)).origin.y)
+	printerr("DOGSETTLE   at (%.2f, %.2f) local (%.2f, %.2f), Sandra (%.2f, %.2f), state %d, still_t %.1f, parent %s" % [tr.global_position.x, tr.global_position.z,
+		tr.position.x, tr.position.z, m.player.global_position.x, m.player.global_position.z, tr.state, tr.still_t, tr.get_parent().name])
+	printerr("DOGSETTLE %-18s speed %.2f sit %.2f legs-going %.2f lowest paw %+.3f m over the ground  E offers: %s" % [tag, tr.speed,
+		tr.sit, tr.ap.speed_scale if tr.ap else 0.0, low - m.ground_at(tr.global_position), m.nearest().get("label", "nothing")])
+	var cc := Camera3D.new()
+	add_child(cc)
+	cc.fov = 45.0
+	cc.global_position = look_at + from_dir.normalized() * 3.2 + Vector3(0, 1.1, 0)
+	cc.look_at(look_at + Vector3(0, 0.35, 0), Vector3.UP)
+	cc.current = true
+	for i in 3:
+		await get_tree().process_frame
+	get_viewport().get_texture().get_image().save_png(dir.path_join(tag.replace(" ", "_") + ".png"))
+	cc.queue_free()
+	m.cam.current = true
+
+
+func run_dogsettle(dir: String) -> void:
+	# (round 41c, 10 #26a/#26b) Trufa following: walking, stopped 1 s and 4 s, then on a city bench and a hill bench;
+	# what E offers with her beside Sandra
+	DirAccess.make_dir_recursive_absolute(dir)
+	await get_tree().create_timer(3.0).timeout
+	m.set_clock(660.0)
+	m.game.S.missions["dog"] = {"st": "done", "num": 3}
+	var tr: Node3D = m.street.trufa
+	for bi in [0, 1]:
+		var pick: Array = []
+		for b in m.benches.list:
+			var ok: bool = (b[0] as Vector2).y > -60.0 if bi == 0 else ((b[0] as Vector2).y < -100.0 and (b[0] as Vector2).x < -40.0)
+			if ok:
+				pick = b
+				break
+		var fr: Vector2 = pick[0] + pick[1] * 4.0
+		place(fr.x, fr.y, atan2(-pick[1].x, -pick[1].y))
+		tr.global_position = Vector3(fr.x + 1.0, m.ground_at(Vector3(fr.x, 0, fr.y)), fr.y + 1.0)
+		tr.state = tr.FOLLOW
+		tr.trail.clear()
+		await get_tree().create_timer(1.0).timeout
+		# walk up to the bench, stop in front of it
+		m.vkeys[KEY_W] = true
+		await get_tree().create_timer(1.0).timeout
+		m.vkeys.clear()
+		var tag := "city" if bi == 0 else "hill"
+		await get_tree().create_timer(1.0).timeout
+		var side := Vector3(-pick[1].y, 0, pick[1].x)
+		await dog_report(dir, tag + " stopped 1s", tr.global_position, side)
+		await get_tree().create_timer(3.0).timeout
+		await dog_report(dir, tag + " stopped 4s", tr.global_position, side)
+		var fr2: Vector2 = pick[0] + pick[1] * 0.75
+		place(fr2.x, fr2.y, atan2(-pick[1].x, -pick[1].y))
+		await get_tree().create_timer(0.8).timeout
+		printerr("DOGSETTLE %s before the bench, E offers: %s" % [tag, m.nearest().get("label", "nothing")])
+		m.input_key(KEY_E)
+		await get_tree().create_timer(4.0).timeout
+		var bp := Vector3(pick[0].x, m.ground_at(Vector3(pick[0].x, 0, pick[0].y)), pick[0].y)
+		await dog_report(dir, tag + " on the bench", bp + Vector3(pick[1].x, 0, pick[1].y) * 0.6, side * 1.0 + Vector3(pick[1].x, 0, pick[1].y) * 0.8)
+		m.input_key(KEY_E)
+		await get_tree().create_timer(2.0).timeout
+		printerr("DOGSETTLE %s got up: seated=%s, Trufa following=%s" % [tag, m.benches.seated(), tr.state == tr.FOLLOW])
+	# by her own bike, Trufa beside: E offers the bike
+	m.game.S.has_bike = true
+	var bk: Node3D = m.street.own_bike
+	if bk:
+		place(bk.position.x + 0.9, bk.position.z, -PI / 2.0)
+		tr.global_position = bk.position + Vector3(1.3, 0, 0.6)
+		await get_tree().create_timer(1.0).timeout
+		printerr("DOGSETTLE by the bike with Trufa beside: E offers %s" % m.nearest().get("label", "nothing"))
+	# staying put: she comes first
+	tr.state = tr.STAY
+	await get_tree().create_timer(0.5).timeout
+	printerr("DOGSETTLE Trufa told to stay, by the bike: E offers %s" % m.nearest().get("label", "nothing"))
 	end_test()

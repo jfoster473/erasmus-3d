@@ -258,6 +258,18 @@ the later round wins and the change is marked **(changed)**. Where objects stand
     options should only trigger once the mission is complete"). Told to stay, she sits; if Sandra walks 10 m off, she
     trots home. Outside a building Sandra goes into, she waits; if Sandra leaves by another door she stays put; after
     30 s she goes home; she rejoins within 3 m (`engine/dog.gd STAY_RELEASE`, `WAIT_HOME`, `REJOIN`).
+26a. **Following, she settles when Sandra does**: once Sandra stops she stops too, turned towards her, never running
+    on the spot (her legs move only while she really moves); after 3 s stopped she sits; when Sandra sits on a bench,
+    she sits on the ground just in front of it at Sandra's feet, a little to one side, facing the way the bench faces,
+    her paws on the ground, never through it; she gets up and follows again when Sandra moves or stands (round 41c,
+    the user: "It should sit down if I stop for more than 3 seconds. And it shouldn't be running. And its legs are
+    sinking into the ground too. If I'm sitting on the bench, it should sit down as well. Just on the ground"; dog.gd
+    `SETTLE`).
+26b. **E with the dog following offers her last**: anything else in reach (a bench, the bike, a person, a door, a
+    thing) comes first; to talk to her, step away from them. When she isn't following (lost, staying, waiting, at home)
+    she comes first (round 41c, the user: "If there are two options and one of them is Trufa should be the secondary
+    one… That's only when Trufa is following me. When Trufa's just staying where they are, Trufa is the first thing to
+    talk to"; street_life.gd `candidates`, `prio`).
 27. **The dog on the bike** rides in a basket on the back of Sandra's own bike: she runs up and pounces in (at most
     1.2 s run, 0.45 s hop), sits low and forward with her tail out of the back and space at the front, and doesn't wag
     in the basket; other bikes keep their small basket (rounds 22–24; `dog.gd SEAT_FWD 0.15`, `SEAT_DROP 0.2`).

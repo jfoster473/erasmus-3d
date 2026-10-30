@@ -2416,6 +2416,18 @@ for (j0, j1, sd) in runs_:
                     sq_ = sq_[:-(back_ - 1)] + new_
                     run = sq_ if end_ != 0 else list(reversed(sq_))
                     break
+    # (round 41c, the user: "extend the rope fence so that it covers here and you can't fall down", agreed on the plan
+    # round41/fence_gap_plan.png: on the bend's lower leg the rope stopped 1.5 m short of the white lineside fence) a run
+    # that ends within 3 m of the white fence's end runs on to just beside its end post (D6)
+    for fe_ in N.FUNI_FENCE_ENDS:
+        for end_q in (0, -1):
+            eq_ = run[end_q][0]
+            gd_ = math.hypot(fe_[0] - eq_[0], fe_[1] - eq_[1])
+            if 0.35 < gd_ < 3.0:
+                k3_ = (gd_ - 0.15) / gd_
+                q3_ = ((eq_[0] + (fe_[0] - eq_[0]) * k3_, eq_[1] + (fe_[1] - eq_[1]) * k3_), run[end_q][1])
+                run = run + [q3_] if end_q == -1 else [q3_] + run
+                print('NORTH rope carried on %.1f m to the white fence at (%.1f, %.1f)' % (gd_ - 0.15, fe_[0], fe_[1]))
     for (q_, iq_) in run:
         nx_, nz_ = _normal(iq_)
         if iq_ >= TOP_LEG_I and nz_ * sd > 0:
