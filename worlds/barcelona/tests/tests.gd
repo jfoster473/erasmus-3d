@@ -113,6 +113,7 @@ const MODES := {
 	"--vfchain=": "run_vfchain",
 	"--lookstate": "run_lookstate",
 	"--dogsettle=": "run_dogsettle",
+	"--doghome": "run_doghome",
 	"--vftest=": "run_vftest",
 	"--vfplaces=": "run_vfplaces",
 	"--cryptprobe": "run_cryptprobe",
@@ -8572,4 +8573,28 @@ func run_dogsettle(dir: String) -> void:
 	tr.state = tr.STAY
 	await get_tree().create_timer(0.5).timeout
 	printerr("DOGSETTLE Trufa told to stay, by the bike: E offers %s" % m.nearest().get("label", "nothing"))
+	end_test()
+
+
+func run_doghome() -> void:
+	# (round 41c, 10 #26c) H with Trufa following: once her mission is done she's back at Montse's feet; before, she
+	# comes home with Sandra
+	await get_tree().create_timer(3.0).timeout
+	var tr: Node3D = m.street.trufa
+	for done in [true, false]:
+		if done:
+			m.game.S.missions["dog"] = {"st": "done", "num": 3}
+		else:
+			m.game.S.missions["dog"] = {"st": "active", "num": 3}
+		place(30.0, 50.0, 0.0)
+		tr.position = Vector3(31.0, m.ground_at(Vector3(31, 0, 50)), 50.5)
+		tr.follow()
+		await get_tree().create_timer(1.0).timeout
+		m.take_me_home()
+		await talk_through([0])
+		await get_tree().create_timer(2.5).timeout
+		var p: Vector3 = m.player.global_position
+		printerr("DOGHOME mission done=%s: state %d (home %d, following %d), %.1f m from her owner's spot, %.1f m from Sandra" % [done,
+			tr.state, tr.HOME, tr.FOLLOW, Vector2(tr.position.x - tr.home_pos.x, tr.position.z - tr.home_pos.z).length(),
+			Vector2(tr.position.x - p.x, tr.position.z - p.z).length()])
 	end_test()

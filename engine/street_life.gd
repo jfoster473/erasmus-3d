@@ -199,6 +199,28 @@ func send_home() -> void:
 		main.show_dialog("", ["(Trufa sits down and looks at you. She doesn't know the way home from here. Better walk her back to Montse yourself.)"])
 
 
+func on_take_home(at: Vector3) -> void:
+	# (round 41c, 10 #26c, the user: "Take me home: She should go back to her owner") H: a dog out with Sandra is back
+	# at her owner's feet; before her mission is done she comes home with Sandra instead, so it isn't skipped
+	if not trufa or not trufa.state in [Dog.FOLLOW, Dog.STAY, Dog.WAIT, Dog.GOING_HOME]:
+		return
+	if trufa.get_parent() != main.outdoor:              # (riding in the basket: back on the ground first)
+		trufa.get_parent().remove_child(trufa)
+		main.outdoor.add_child(trufa)
+		trufa.rotation = Vector3.ZERO
+	trufa.in_basket = 0.0
+	trufa.basket_in = false
+	if main.game.m_done("dog"):
+		trufa.settle_home()
+		trufa.heading = trufa.home_yaw
+	else:
+		var p := at + Vector3(0.9, 0.0, 0.4)
+		p.y = main.ground_at(p)
+		trufa.position = p
+		trufa.trail.clear()
+		trufa.follow()
+
+
 func on_enter() -> void:
 	# Sandra goes indoors: a following Trufa waits outside the door (round 23; dog.gd WAIT)
 	if trufa and trufa.state == Dog.FOLLOW:

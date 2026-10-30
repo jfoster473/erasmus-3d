@@ -265,6 +265,11 @@ the later round wins and the change is marked **(changed)**. Where objects stand
     the user: "It should sit down if I stop for more than 3 seconds. And it shouldn't be running. And its legs are
     sinking into the ground too. If I'm sitting on the bench, it should sit down as well. Just on the ground"; dog.gd
     `SETTLE`).
+26c. **"Take me home" (H) and the dog**: once her mission is done, a dog with Sandra (following, told to stay, or waiting
+    outside) goes back to her owner — she is at her owner's feet when the screen comes back; before it is done she comes
+    home with Sandra, beside her at the door, so the mission isn't skipped. Going indoors keeps its 30 s wait (round
+    41c, the user: "The 30-second limit in the room is fine. Take me home: She should go back to her owner";
+    street_life.gd `on_take_home`). Standing or sitting still, she never goes home on her own.
 26b. **E with the dog following offers her last**: anything else in reach (a bench, the bike, a person, a door, a
     thing) comes first; to talk to her, step away from them. When she isn't following (lost, staying, waiting, at home)
     she comes first (round 41c, the user: "If there are two options and one of them is Trufa should be the secondary

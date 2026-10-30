@@ -3851,6 +3851,8 @@ func take_me_home() -> void:
 			var n := Vector2(home.normal[0], home.normal[1])
 			fade_then(func():
 				teleport(Vector3(home.pos[0] + n.x * 2.0, 0, home.pos[1] + n.y * 2.0), atan2(-n.x, -n.y))
+				if street and street.has_method("on_take_home"):
+					street.on_take_home(player.global_position)     # (round 41c, 10 #26c: the dog home to her owner)
 				note_spot())},
 		{"label": "Stay here", "fn": func(): pass}])
 
