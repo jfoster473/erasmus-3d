@@ -1,0 +1,9 @@
+# Kept off GitHub (24 October 2026): the big files go by Google Drive (bigfiles/README.md); the workshop (the journal,
+# the screenshots, the test runs) stays on this computer (workshop/README.md).
+/bigfiles/
+/workshop/
+
+# Godot's and Python's caches, and Finder's files
+/.godot/
+__pycache__/
+.DS_Store

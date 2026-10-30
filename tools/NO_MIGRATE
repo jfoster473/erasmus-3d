@@ -1,0 +1,2 @@
+Since 20 October 2026 08:00 the work carries on in this folder. tools/migrate.py, split_game.py and old_docs.py
+refuse to run while this file exists (they would copy the old '3D tests' files over the new work).
