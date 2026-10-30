@@ -18,8 +18,12 @@ running to-do list). At the end of each round bring this file, the journal and `
 still in force belongs here, in `docs/rules/` or in the code**: only they go to GitHub, the journal doesn't.
 
 ## Where things are (since 24 October 2026)
-- **On GitHub**: the code (`engine/`, `shaders/`, `builder/`, `worlds/`, `tools/`), `docs/` with the rules, this file,
-  `README.md` (`.gitignore` keeps the two folders below out).
+- **On GitHub** (since 30 Oct 2026: the private repository `jfoster473/erasmus-3d`, branch `main`; commits as the
+  user's GitHub no-reply address, set in this repo's git config): the code (`engine/`, `shaders/`, `builder/`, `worlds/`,
+  `tools/`), `docs/` with the rules, this file, `README.md` (`.gitignore` keeps the two folders below out). Commit and
+  push only when the user asks. This Mac has no GitHub tool installed: the first push used GitHub's `gh` from a
+  download in the session's temporary folder (the user signed in at github.com/login/device; the sign-in is in the
+  Mac's keychain); for a later push, `gh` again (ask before downloading) or the user's own way.
 - **`bigfiles/`** (off GitHub, handed over by Google Drive; `bigfiles/README.md`): what is too big for GitHub or made
   by the build: `originals/meshy/` (bought with Meshy credits: can't be remade), `cache/meshy/`, `built/barcelona/`
   (the built city, `scene.json`, light maps, `build.log`), `built/props/`, `built/audio/`. It sits inside the project
