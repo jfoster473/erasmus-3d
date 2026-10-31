@@ -5159,6 +5159,37 @@ def reach_d(x, z):
     return d
 
 
+def west_wood(x, z):
+    """(Round 41c, 02 #128b, the user: "the area to the west of the amusement park has no trees once you run past the first
+    part… Just pad it out") the wood west of the funfair, uphill of the path's top leg, out to the walk box's edge: she
+    can run into it, but past the fair's first 30 m its trees were the far version only (tops, no trunks) or the light
+    one, and past z -300 nothing grew under them. Now whole trees and the glade's undergrowth (planted after the hill's
+    own pass, with their own random numbers, 02 #130)."""
+    if not (-236.0 < x < N.FAIR[0] and -334.0 < z < -262.0):
+        return False
+    up = min(pts[TOP_LEG_I:], key=lambda p: abs(p[0] - x))
+    return z < -280.0 if x < -207.0 else z < up[1] - 1.0          # (west of the hairpin: above its bend)
+
+
+TOP_VIEW = [v_ for v_ in VIEWPOINTS if v_[1] < -270.0]
+
+
+def top_lookout(x, z):
+    """(Round 41c, 02 #59 changed, the user from the Ferris wheel: "it looks like a low-level forest. Could you make a full
+    forest like the other ones?… There should be a canopy") the slope below the top bend's lookout, between the top leg
+    and the leg below: she walks into it from the glade and from the bench, so its trees are full size, not the
+    lookouts' low ones (the bench's own clearing stays, near_bench)."""
+    for (vx, vz) in TOP_VIEW:
+        d = Vector((x - vx, z - vz))
+        if 0.01 < d.length < VIEW_R and d.normalized().dot(VIEW_DIR) > math.cos(VIEW_HALF):
+            return True
+    return False
+
+
+west_trees = []         # (x, z, kind, size): the trees west_wood makes whole, in the hill pass's own places
+_WEST_SINK = (Cards(), MB(uv=True)) if 'SPECIES' in globals() else None     # (their old light versions: built, never kept)
+
+
 if 'SPECIES' in globals():
     STEP_ = 1.6
     zi = -345.0
@@ -5207,13 +5238,26 @@ if 'SPECIES' in globals():
                 leaves = HillBoth(hchunk(x, z, 'leaves'), hchunk(x, z, 'farleaves'), kk)
                 trunks = HillBoth(hchunk(x, z, 'trunks'), hchunk(x, z, 'fartrunks'), 1.0)
                 n_full += 1
+            look_ = in_view(x, z) and top_lookout(x, z)
+            redo_ = ((far_only or DET[0] < 1.0) and west_wood(x, z)) or look_
+            if redo_:
+                # (02 #128b: made whole below; the light version still built, into nothing, so the random numbers
+                # run on as before and every other tree on the hill stays where it was, 02 #130)
+                leaves = HillBoth(None if far_only else _WEST_SINK[0], _WEST_SINK[0], leaves.k)
+                trunks = HillBoth(None if far_only else _WEST_SINK[1], _WEST_SINK[1], 1.0)
+                nb_ = len(HILL_BLOBS)
             SPECIES[sp](trunks, leaves, base, hr, s_)
+            if redo_:
+                del HILL_BLOBS[nb_:]
+                west_trees.append((x, z, None if look_ else sp, s_))
             tree_pts.append((x, z))
             # (where she may walk off the path: the trunks are solid; round 41, the user: "The trees in the forest are also
             # I can cycle through them… Aren't they meant to be solid?" — every trunk within 12 m of the path too, where
             # she or the bike can get to)
             # (and round 41: on the hill's walkable foot, below the wood's edge line — the new lawn west of the park)
-            if glade_ or (not far_only and N.path_near(x, z)[0] < 12.0) or \
+            if redo_:
+                pass                                      # (its trunk made solid with the whole tree, below)
+            elif glade_ or (not far_only and N.path_near(x, z)[0] < 12.0) or \
                     (-61.0 < x < 60.0 and z < -102.0 and N.park_r(x, z) >= 1.0 and N.wood_edge_side(x, z) < 1.0):
                 scene['trees'].append([round(x, 3), round(z, 3)])
                 scene.setdefault('forest_trees', []).append([round(x, 3), round(z, 3)])
@@ -5684,6 +5728,62 @@ if 'SPECIES' in globals():
                         n_tuft += 1
         zi += SH_
     print('NORTH floor: %d ferns, %d tufts; far from the path: %d shrubs with their floor' % (n_fern, n_tuft, n_far))
+    # (round 41c, 02 #128b) the wood west of the funfair made whole: its trees where the hill's pass put them, in full,
+    # their trunks solid (she can run in there), and undergrowth as thick as the glade's — a shrub every 2 m or so
+    # with a fern or a tuft or two at its foot, clear of the trunks and the path's own planting. Its own random numbers.
+    wwr_ = random.Random(4143)
+    DET[0] = 1.0
+    _wt = {}
+    for (x, z, sp_, s_) in west_trees:
+        if sp_ is None:                                 # (below the top lookout: the hill's own mix, full size)
+            sp_, s_ = pick(HILL_MIX, wwr_), wwr_.uniform(0.9, 1.3)
+        SPECIES[sp_](HillBoth(hchunk(x, z, 'trunks'), hchunk(x, z, 'fartrunks'), 1.0),
+                     HillBoth(hchunk(x, z, 'leaves'), hchunk(x, z, 'farleaves'), 1.0), V(x, z, gz(x, z) - 0.05), wwr_, s_)
+        scene['trees'].append([round(x, 3), round(z, 3)])
+        scene.setdefault('forest_trees', []).append([round(x, 3), round(z, 3)])
+        _wt.setdefault((int(x // 2), int(z // 2)), []).append((x, z))
+    n_ws = 0
+    zi = -334.0
+    while zi < -228.0:
+        xi = -236.0
+        while xi < -70.0:
+            x, z = xi + wwr_.uniform(0, SH_), zi + wwr_.uniform(0, SH_)
+            xi += SH_
+            look_ = top_lookout(x, z)
+            if not (west_wood(x, z) or look_) or wood_density(x, z) <= 0.0 or wwr_.random() > (0.55 if look_ else 0.8):
+                continue
+            if N.path_near(x, z)[0] < 9.0:
+                continue                                # (the path's own verges and banks are planted already)
+            if any(math.hypot(x - tx_, z - tz_) < 0.9 for i_ in (-1, 0, 1) for j_ in (-1, 0, 1)
+                   for tx_, tz_ in _wt.get((int(x // 2) + i_, int(z // 2) + j_), ())):
+                continue                                # (not in a trunk)
+            rr = wwr_.uniform(0.35, 0.6) if (in_view(x, z) and not look_) else wwr_.uniform(0.7, 1.3)
+            c = V(x, z, gz(x, z) + 0.1 + rr * 0.35)
+            hchunk(x, z, 'plants').clump(c, (rr, rr, rr * 0.6), 7 + int(rr * 4), 0.7, pick(HILL_SHRUBS, wwr_), wwr_)
+            HILL_BLOBS.append((c.copy(), (rr, rr, rr * 0.6), 0.7, 'bush'))
+            n_ws += 1
+            for _k in range(2):
+                fx, fz = x + wwr_.uniform(-1.0, 1.0), z + wwr_.uniform(-1.0, 1.0)
+                g0 = gz(fx, fz)
+                if wwr_.random() < 0.6:
+                    a0 = wwr_.uniform(0, 6.28)
+                    size = wwr_.uniform(0.45, 0.7)
+                    for kf in range(wwr_.randint(5, 7)):
+                        rot = vertical(a0 + kf * 1.0 + wwr_.uniform(-0.25, 0.25)) @ Matrix.Rotation(wwr_.uniform(0.55, 0.95), 3, 'X')
+                        c0 = V(fx, fz, g0)
+                        hchunk(fx, fz, 'plants').card(c0 + rot @ Vector((0, size / 2, 0)), size * wwr_.uniform(0.85, 1.1), rot,
+                                                      c0 - Vector((0, 0, size * 0.5)), M_FERN, 0.35)
+                else:
+                    size = wwr_.uniform(0.22, 0.34)
+                    c0 = V(fx, fz, g0 + size * 0.45)
+                    a0 = wwr_.uniform(0, 3.14)
+                    for kf in range(3):
+                        rot = vertical(a0 + kf * 1.0472) @ Matrix.Rotation(wwr_.uniform(-0.15, 0.15), 3, 'X')
+                        hchunk(fx, fz, 'plants').card(c0, size, rot, c0 - Vector((0, 0, size)), M_TUFT, 0.35)
+        zi += SH_
+    _WEST_SINK[1].bm.free()
+    print('NORTH west wood: %d trees made whole (%d below the top lookout), %d shrubs' %
+          (len(west_trees), sum(1 for w_ in west_trees if w_[2] is None), n_ws))
     # (round 41, the user: "add foliage to the ground there… it looks bare") the lawn between the wood and the park's west
     # wall, above the town's top corner, which neither the wood (it stops 3 m short of the wall) nor the park planted:
     # tufts all over, patchy, ferns and the odd shrub towards the trees, nothing against the wall's foot

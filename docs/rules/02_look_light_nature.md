@@ -263,7 +263,8 @@ DECISIONS.md's; "HISTORY's round N" means the early rounds counted in `workshop/
     leaf card, each bigger), swapped in beyond about 100 m (`Both` in `forest.py`). Trees out of reach past a wood's
     edge rise are only tops on bare trunks, with enough smaller cards that no "green tent" floats. (Round 25, the
     user: far away "you don't need branches and stems, really just the bushy green tree tops"; round 26: smaller
-    cards.)
+    cards.) The swap stays at 100 m, on the Ferris wheel too (round 41c: 50 m on the wheel was tried, 38 → 40 fps and
+    no difference to see; the user: "Put it back to 100").
 54. The broad-crowned trees stand back from paths; only tall narrow ones (pines, cypresses) close beside a path, so
     no crown hangs at head height over the walk (wood: cypress/cork/carob replaced by holm within 0.7 tiles of a
     path; park: pines and cypresses from 2.2 m, others from 3.2 m). (Round 33: "an olive's or holm oak's crown hung at
@@ -282,6 +283,11 @@ DECISIONS.md's; "HISTORY's round N" means the early rounds counted in `workshop/
 59. Lookouts keep their trees but low ones (holm, olive, cork at half size) so you peek over them; no big clearing
     below a viewpoint, and no tree in front of a bench's view. (Round 25, the user: "The look out points should not
     have big clearings below, the trees should simply be lower to allow Sandra to peek through"; REVIEW §10.)
+    **Changed** in round 41c: not where she can walk into the slope below — there the wood stays full, tall trees
+    and a canopy, carrying on the wood either side; only the bench's own small clearing is kept (Barcelona: the
+    lookout on the top bend above the ball's glade, `north_build.top_lookout`). (The user, seeing it from the Ferris
+    wheel: "it looks like a low-level forest. Could you make a full forest like the other ones? The trees are as big
+    as her. There should be a canopy. It should be a continuation of the forest on either side.")
 60. A city park has trees (Barcelona's Ciutadella should; it currently plants none — see "Unclear" Q2). (Round 32b
     open item.)
 
@@ -597,6 +603,11 @@ DECISIONS.md's; "HISTORY's round N" means the early rounds counted in `workshop/
      bush, thickest by the trees and thinning out to bare grass by the track. (Round 40, the user: "add a few more
      trees and a bit of foliage? Just extend the forest lightly around the funicular"; then "add a bit of foliage
      along the grass, now we don't want thicker, we want it actually to be thinning as it gets closer to it".)
+128b. Wherever she can walk, the wood is a full wood: whole trees with trunks (solid), and undergrowth of shrubs,
+     ferns and tufts as thick as the glade's, all the way across, not only round its edges. Only woods she can never
+     reach may be the light far version (53). (Round 41c, the user, west of the funfair: "Around the edges, it's
+     really good, but then you run in the middle, there's no trees, no foliage. Just pad it out"; Barcelona:
+     `north_build.west_wood`, its own random numbers, 130; and the slope below the top bend's lookout, 59.)
 
 ## Never empty (no "liminal" places)
 

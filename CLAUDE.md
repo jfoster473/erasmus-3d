@@ -18,7 +18,7 @@ running to-do list). At the end of each round bring this file, the journal and `
 still in force belongs here, in `docs/rules/` or in the code**: only they go to GitHub, the journal doesn't.
 
 ## Where things are (since 24 October 2026)
-- **On GitHub** (since 30 Oct 2026: the private repository `jfoster473/erasmus-3d`, branch `main`; commits as the
+- **On GitHub** (since 30 Oct 2026: the repository `jfoster473/erasmus-3d`, public since 31 Oct at the user's word, branch `main`; commits as the
   user's GitHub no-reply address, set in this repo's git config): the code (`engine/`, `shaders/`, `builder/`, `worlds/`,
   `tools/`), `docs/` with the rules, this file, `README.md` (`.gitignore` keeps the two folders below out). Commit and
   push only when the user asks. This Mac has no GitHub tool installed: the first push used GitHub's `gh` from a

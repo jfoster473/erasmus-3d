@@ -125,6 +125,7 @@ const MODES := {
 	"--lookopts=": "run_lookopts",
 	"--fpstour": "run_fpstour",
 	"--rideperf": "run_rideperf",
+	"--wheelfps=": "run_wheelfps",
 	"--ridelook=": "run_ridelook",
 	"--titleload=": "run_titleload",
 	"--bagitem=": "run_bagitem",
@@ -7553,6 +7554,24 @@ func run_lookopts(dir: String) -> void:
 	end_test()
 
 
+func run_wheelfps(png: String) -> void:
+	# (round 41c, the user tried the woods' far trees from 50 m instead of 100 m on the wheel: 38 → 40 fps, no change
+	# to see; put back to 100 m at their word) once round the wheel at noon: the frame rate for the first 18 s, a picture near the top, then the rest of the ride
+	await get_tree().create_timer(3.0).timeout
+	m.set_clock(720.0)
+	m.game.S.money = maxi(int(m.game.S.money), 1000)
+	var W: Dictionary = m.D.north.wheel
+	place(float(W.gate[0]), float(W.gate[1]) + 0.8, PI)
+	await get_tree().create_timer(1.0).timeout
+	m.north.act("wheel")
+	await talk_through([0])
+	await get_tree().create_timer(2.0).timeout
+	await fps_window("wheel, rising", 18.0, func(): return m.north.ride.is_empty())
+	get_viewport().get_texture().get_image().save_png(png)
+	await fps_window("wheel, over the top and down", 30.0, func(): return m.north.ride.is_empty())
+	end_test()
+
+
 func fps_window(label: String, secs: float, until := Callable()) -> void:
 	# the frame rate over a stretch of play: the average, and the slowest frames (the worst 1 in 20)
 	var times := []
@@ -7832,6 +7851,10 @@ func run_fpstour() -> void:
 	await walk.call("walking: the beach", Vector2(-100.0, 175.0), Vector2(100.0, 175.0), 6.0, false)
 	await walk.call("walking: up the hill path", Vector2(-133.6, -223.0), Vector2(-120.0, -260.0), 6.0, false)
 	await walk.call("walking: Park Güell", Vector2(107.1, -185.0), Vector2(107.1, -205.0), 5.0, false)
+	# (round 41c, 02 #128b) the ball's glade, and the wood west of the funfair made whole
+	await walk.call("walking: the ball's glade", Vector2(-188.0, -258.0), Vector2(-150.0, -258.0), 5.0, false)
+	await walk.call("walking: the wood west of the funfair", Vector2(-112.0, -302.0), Vector2(-190.0, -316.0), 6.0, false)
+	await walk.call("walking: below the top lookout", Vector2(-146.0, -262.0), Vector2(-104.0, -256.0), 6.0, false)
 	# a room
 	m.show_room("int_berlin", false)
 	await get_tree().create_timer(1.5).timeout
